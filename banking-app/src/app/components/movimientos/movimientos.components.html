@@ -1,0 +1,140 @@
+<div class="content-wrapper">
+  <div class="header-section">
+    <h2>Movimientos</h2>
+
+    <div class="header-actions">
+      <div class="search-box">
+        <input type="text" [(ngModel)]="searchTerm" (input)="onSearch()" placeholder="Buscar" class="search-input" />
+      </div>
+
+      <button type="button" class="btn-nuevo" (click)="openModal()">Nuevo</button>
+
+
+
+    </div>
+  </div>
+
+  <div class="table-wrapper">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Fecha</th>
+          <th>Número de Cuenta</th>
+          <th>Tipo de Movimiento</th>
+          <th>Monto</th>
+          <th>Saldo</th>
+          <th>Acciones</th>
+
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr *ngFor="let mov of filteredMovements">
+          <td>{{ mov.movementDate | date:'dd/MM/yyyy HH:mm' }}</td>
+
+          <td>{{ mov.accountNumber }}</td>
+
+
+          <td>{{ mov.movementType }}</td>
+
+          <td>
+            <span [class]="mov.movementAmount >= 0 ? 'text-success' : 'text-danger'">
+              {{ mov.movementAmount >= 0 ? '+' : '' }}{{ mov.movementAmount }}
+            </span>
+          </td>
+
+          <td class="font-bold">
+            {{ mov.movementBalance }}
+          </td>
+
+          <!-- <td>
+            <span [class]="mov.movementState ? 'badge-active' : 'badge-inactive'">
+              {{ mov.movementState ? 'ACTIVE' : 'INACTIVE' }}
+            </span>
+          </td> -->
+          <td>
+            <button class="btn-edit" (click)="editMovement(mov)">Editar</button>
+            <button class="btn-delete" (click)="deleteMovement(mov)">Eliminar</button>
+          </td>
+        </tr>
+
+
+
+        <tr *ngIf="filteredMovements.length === 0">
+          <td colspan="6" class="no-data">
+            No movements found
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Nuevo Movimiento</h3>
+      <button class="btn-close" (click)="closeModal()">&times;</button>
+    </div>
+
+    <form [formGroup]="movementForm" (ngSubmit)="onSubmit()">
+      <div class="form-body">
+
+        <!-- ACCOUNT -->
+        <div class="form-group">
+          <label>Cuenta *</label>
+          <select formControlName="accountNumber"
+            [class.error]="movementForm.get('accountNumber')?.invalid && movementForm.get('accountNumber')?.touched">
+
+            <option value="">Seleccionar cuenta</option>
+
+            <option *ngFor="let account of accounts" [value]="account.numeroCuenta">
+              {{ account.numeroCuenta }} - {{ account.nombreCliente }}
+            </option>
+          </select>
+
+          <span class="error-msg"
+            *ngIf="movementForm.get('accountNumber')?.invalid && movementForm.get('accountNumber')?.touched">
+            {{ getErrorMessage('accountNumber') }}
+          </span>
+        </div>
+
+        <!-- MOVEMENT TYPE -->
+        <div class="form-group">
+          <label>Tipo de Movimiento *</label>
+          <select formControlName="movementType"
+            [class.error]="movementForm.get('movementType')?.invalid && movementForm.get('movementType')?.touched">
+
+            <option value="">Seleccionar</option>
+            <option value="DEPOSIT">Deposito</option>
+            <option value="WITHDRAWAL">Retiro</option>
+          </select>
+
+          <span class="error-msg"
+            *ngIf="movementForm.get('movementType')?.invalid && movementForm.get('movementType')?.touched">
+            {{ getErrorMessage('movementType') }}
+          </span>
+        </div>
+
+        <!-- AMOUNT -->
+        <div class="form-group">
+          <label>Cantidad *</label>
+          <input type="number" step="0.01" formControlName="movementAmount"
+            [class.error]="movementForm.get('movementAmount')?.invalid && movementForm.get('movementAmount')?.touched" />
+
+          <span class="error-msg"
+            *ngIf="movementForm.get('movementAmount')?.invalid && movementForm.get('movementAmount')?.touched">
+            {{ getErrorMessage('movementAmount') }}
+          </span>
+        </div>
+
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn-cancel" (click)="closeModal()">Cancel</button>
+        <button type="submit" class="btn-save">Save</button>
+      </div>
+    </form>
+  </div>
+</div>

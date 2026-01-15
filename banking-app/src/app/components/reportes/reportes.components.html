@@ -1,0 +1,98 @@
+<div class="content-wrapper">
+  <h2>Reportes</h2>
+
+  <div class="filters-section">
+    <div class="filter-row">
+      <div class="form-group">
+        <label>Cliente</label>
+        <select [(ngModel)]="clienteSeleccionado" class="form-control">
+          <option [ngValue]="null">Seleccionar cliente</option>
+          <option *ngFor="let cliente of clientes" [ngValue]="cliente">
+            {{ cliente.personName }}
+          </option>
+        </select>
+
+      </div>
+
+      <div class="form-group">
+        <label>Fecha Inicio</label>
+        <input type="date" [(ngModel)]="fechaInicio" class="form-control" />
+      </div>
+
+      <div class="form-group">
+        <label>Fecha Fin</label>
+        <input type="date" [(ngModel)]="fechaFin" class="form-control" />
+      </div>
+    </div>
+
+    <div class="actions-row">
+      <button class="btn-generar" (click)="generarReporte()">
+        Generar Reporte
+      </button>
+      <button class="btn-pdf" (click)="descargarPDF()" [disabled]="!mostrarReporte">
+        Descargar PDF
+      </button>
+    </div>
+  </div>
+
+  <div class="reporte-section" *ngIf="mostrarReporte">
+    <div class="reporte-header">
+      <h3>Estado de Cuenta</h3>
+      <div class="reporte-info">
+        <p><strong>Cliente:</strong> {{ getNombreCliente() }}</p>
+        <p><strong>Período:</strong> {{ fechaInicio | date:'dd/MM/yyyy' }} - {{ fechaFin | date:'dd/MM/yyyy' }}</p>
+      </div>
+    </div>
+
+    <div class="table-wrapper">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Cliente</th>
+            <th>Número Cuenta</th>
+            <th>Tipo</th>
+            <th>Saldo Inicial</th>
+            <th>Estado</th>
+            <th>Movimiento</th>
+            <th>Saldo Disponible</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <!-- Iterar sobre cada cuenta del cliente -->
+          <ng-container *ngFor="let account of reporteGenerado?.accounts">
+            <!-- Iterar sobre cada movimiento de la cuenta -->
+            <tr *ngFor="let movement of account.movements">
+              <td>{{ movement.movementDate }}</td>
+              <td>{{ reporteGenerado?.clientName }}</td>
+              <td>{{ account.accountNumber }}</td>
+              <td>{{ account.accountType }}</td>
+              <td>${{ account.balance | number:'1.2-2' }}</td>
+              <td>
+                <span class="badge-active">True</span>
+              </td>
+              <td>
+                <span [class]="movement.movementAmount >= 0 ? 'text-success' : 'text-danger'">
+                  {{ movement.movementAmount >= 0 ? '+' : '' }}${{ movement.movementAmount | number:'1.2-2' }}
+                </span>
+              </td>
+              <td class="font-bold">${{ movement.movementBalance | number:'1.2-2' }}</td>
+            </tr>
+          </ng-container>
+
+          <!-- Mensaje cuando no hay datos -->
+          <!-- <tr *ngIf="!reporteGenerado?.accounts || reporteGenerado?.accounts">
+            <td colspan="8" class="no-data">No hay movimientos en el período seleccionado</td>
+          </tr> -->
+
+          <tr *ngIf="noHayMovimientos()">
+            <td colspan="8" class="no-data">No hay movimientos en el período seleccionado</td>
+          </tr>
+
+        </tbody>
+
+      </table>
+    </div>
+  </div>
+</div>

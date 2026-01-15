@@ -1,0 +1,170 @@
+<div class="content-wrapper">
+  <div class="header-section">
+    <h2>Cuentas</h2>
+
+    <div class="header-actions">
+      <div class="search-box">
+        <input type="text" [(ngModel)]="searchTerm" (input)="onSearch()"
+          placeholder="Buscar por número, cliente o identificación" class="search-input" />
+      </div>
+
+      <button class="btn-nuevo" (click)="openModal()">Nuevo</button>
+    </div>
+  </div>
+
+  <div class="table-wrapper">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Número Cuenta</th>
+          <th>Tipo</th>
+          <th>Saldo</th>
+          <th>Cliente</th>
+          <th>Identificación</th>
+          <th>Estado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+
+      <tbody>
+
+        <tr *ngFor="let cuenta of cuentasFiltradas">
+        <tr *ngFor="let cuenta of cuentasFiltradas">
+          <td>{{ cuenta.numeroCuenta || cuenta.accountNumber }}</td>
+          <td>{{ cuenta.tipoCuenta || cuenta.accountType }}</td>
+          <td>{{ (cuenta.saldoInicial || cuenta.accountBalance) | number:'1.2-2' }}</td>
+          <td>{{ cuenta.nombreCliente || '-' }}</td>
+          <td>{{ cuenta.clienteCedula || cuenta.clientIdentification }}</td>
+          <td>
+            <span [class]="(cuenta.estado ?? cuenta.accountState) ? 'badge-active' : 'badge-inactive'">
+              {{ (cuenta.estado ?? cuenta.accountState) ? 'Activa' : 'Inactiva' }}
+            </span>
+          </td>
+          <td>
+            <button class="btn-edit" (click)="openModal(cuenta)">Editar</button>
+            <button class="btn-delete" (click)="deleteCuenta(cuenta)">Eliminar</button>
+          </td>
+        </tr>
+
+        <tr *ngIf="cuentasFiltradas.length === 0">
+          <td colspan="7" class="no-data">No se encontraron cuentas</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+
+    <div class="modal-header">
+      <h3>{{ isEditMode ? 'Editar Cuenta' : 'Nueva Cuenta' }}</h3>
+      <button class="btn-close" (click)="closeModal()">×</button>
+    </div>
+
+    <form [formGroup]="cuentaForm" (ngSubmit)="onSubmit()">
+      <div class="form-body">
+
+        <div class="form-group">
+          <label>Número de Cuenta *</label>
+          <input type="text" formControlName="accountNumber"
+            [class.error]="cuentaForm.get('accountNumber')?.invalid && cuentaForm.get('accountNumber')?.touched" />
+          <span class="error-msg"
+            *ngIf="cuentaForm.get('accountNumber')?.invalid && cuentaForm.get('accountNumber')?.touched">
+            {{ getErrorMessage('accountNumber') }}
+          </span>
+        </div>
+
+        <div class="form-group">
+          <label>Tipo de Cuenta *</label>
+          <select formControlName="accountType"
+            [class.error]="cuentaForm.get('accountType')?.invalid && cuentaForm.get('accountType')?.touched">
+            <option value="">Seleccionar</option>
+            <option value="Ahorro">Ahorro</option>
+            <option value="Corriente">Corriente</option>
+          </select>
+          <span class="error-msg"
+            *ngIf="cuentaForm.get('accountType')?.invalid && cuentaForm.get('accountType')?.touched">
+            {{ getErrorMessage('accountType') }}
+          </span>
+        </div>
+
+        <div class="form-group">
+          <label>Saldo *</label>
+          <input type="number" formControlName="accountBalance" min="0"
+            [class.error]="cuentaForm.get('accountBalance')?.invalid && cuentaForm.get('accountBalance')?.touched" />
+          <span class="error-msg"
+            *ngIf="cuentaForm.get('accountBalance')?.invalid && cuentaForm.get('accountBalance')?.touched">
+            {{ getErrorMessage('accountBalance') }}
+          </span>
+        </div>
+
+        <div class="form-group">
+          <label>Identificación del Cliente *</label>
+          <input type="text" formControlName="clientIdentification"
+            [class.error]="cuentaForm.get('clientIdentification')?.invalid && cuentaForm.get('clientIdentification')?.touched" />
+          <span class="error-msg"
+            *ngIf="cuentaForm.get('clientIdentification')?.invalid && cuentaForm.get('clientIdentification')?.touched">
+            {{ getErrorMessage('clientIdentification') }}
+          </span>
+        </div>
+
+        <div class="form-group">
+          <label>Nombre del Cliente *</label>
+          <input type="text" formControlName="clientName"
+            [class.error]="cuentaForm.get('clientName')?.invalid && cuentaForm.get('clientName')?.touched" />
+          <span class="error-msg"
+            *ngIf="cuentaForm.get('clientName')?.invalid && cuentaForm.get('clientName')?.touched">
+            {{ getErrorMessage('clientName') }}
+          </span>
+        </div>
+
+        <!-- <div class="form-group">
+          <label>Cliente *</label>
+
+          <select
+            formControlName="clientId"
+            [class.error]="cuentaForm.get('clientId')?.invalid && cuentaForm.get('clientId')?.touched">
+
+            <option value="">Seleccionar cliente</option>
+
+            <option *ngFor="let cliente of clientes" [value]="cliente.id">
+              {{ cliente.identificacion }} - {{ cliente.nombre }}
+            </option>
+
+          </select>
+
+          <span class="error-msg"
+                *ngIf="cuentaForm.get('clientId')?.invalid && cuentaForm.get('clientId')?.touched">
+            Debe seleccionar un cliente
+          </span>
+        </div> -->
+
+
+        <div class="form-group checkbox-group">
+          <label>
+            <input type="checkbox" formControlName="accountState" />
+            Cuenta activa
+          </label>
+        </div>
+
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn-cancel" (click)="closeModal()">Cancelar</button>
+        <button type="submit" class="btn-save">
+          {{ isEditMode ? 'Actualizar' : 'Guardar' }}
+        </button>
+      </div>
+
+    </form>
+  </div>
+
+  <div class="notification" *ngIf="showNotification" 
+     [class.notification-success]="notificationType === 'success'"
+     [class.notification-error]="notificationType === 'error'">
+  {{ notificationMessage }}
+</div>
+
+</div>

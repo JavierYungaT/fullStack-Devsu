@@ -1,0 +1,160 @@
+<div class="content-wrapper">
+  <div class="header-section">
+    <h2>Clientes</h2>
+    <div class="header-actions">
+      <div class="search-box">
+        <input
+          type="text"
+          [(ngModel)]="searchTerm"
+          (input)="onSearch()"
+          placeholder="Buscar"
+          class="search-input"
+        />
+      </div>
+      <button class="btn-nuevo" (click)="openModal()">Nuevo</button>
+    </div>
+  </div>
+
+  <div class="table-wrapper">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Identificación</th>
+          <th>Dirección</th>
+          <th>Teléfono</th>
+          <th>Estado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let cliente of clientesFiltrados">
+          <td>{{ cliente.personName }}</td>
+          <td>{{ cliente.personDni }}</td>
+          <td>{{ cliente.personAddress }}</td>
+          <td>{{ cliente.personPhoneNumber }}</td>
+          <td>
+            <span [class]="cliente.clientState ? 'badge-active' : 'badge-inactive'">
+              {{ cliente.clientState ? 'Activo' : 'Inactivo' }}
+            </span>
+          </td>
+          <td>
+            <button class="btn-edit" (click)="openModal(cliente)">Editar</button>
+            <button class="btn-delete" (click)="deleteCliente(cliente)">Eliminar</button>
+          </td>
+        </tr>
+        <tr *ngIf="clientesFiltrados.length === 0">
+          <td colspan="6" class="no-data">No se encontraron clientes</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>{{ isEditMode ? 'Editar Cliente' : 'Nuevo Cliente' }}</h3>
+      <button class="btn-close" (click)="closeModal()">&times;</button>
+    </div>
+
+    <form [formGroup]="clienteForm" (ngSubmit)="onSubmit()">
+      <div class="form-body">
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Nombre *</label>
+            <input
+              type="text"
+              formControlName="personName"
+              [class.error]="clienteForm.get('personName')?.invalid && clienteForm.get('personName')?.touched"
+            />
+          </div>
+
+          <div class="form-group">
+            <label>Género *</label>
+            <select
+              formControlName="personGenre"
+              [class.error]="clienteForm.get('personGenre')?.invalid && clienteForm.get('personGenre')?.touched"
+            >
+              <option value="">Seleccionar</option>
+              <option value="Masculino">Masculino</option>
+              <option value="Femenino">Femenino</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Edad *</label>
+            <input
+              type="number"
+              formControlName="personAge"
+              [class.error]="clienteForm.get('personAge')?.invalid && clienteForm.get('personAge')?.touched"
+            />
+          </div>
+
+          <div class="form-group">
+            <label>Identificación *</label>
+            <input
+              type="text"
+              formControlName="personDni"
+              [class.error]="clienteForm.get('personDni')?.invalid && clienteForm.get('personDni')?.touched"
+            />
+          </div>
+        </div>
+
+        <div class="form-group full-width">
+          <label>Dirección *</label>
+          <input
+            type="text"
+            formControlName="personAddress"
+            [class.error]="clienteForm.get('personAddress')?.invalid && clienteForm.get('personAddress')?.touched"
+          />
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Teléfono *</label>
+            <input
+              type="text"
+              formControlName="personPhoneNumber"
+              [class.error]="clienteForm.get('personPhoneNumber')?.invalid && clienteForm.get('personPhoneNumber')?.touched"
+            />
+          </div>
+
+          <div class="form-group">
+            <label>Contraseña *</label>
+            <input
+              type="password"
+              formControlName="clientPassword"
+              [class.error]="clienteForm.get('clientPassword')?.invalid && clienteForm.get('clientPassword')?.touched"
+            />
+          </div>
+        </div>
+
+        <div class="form-group checkbox-group">
+          <label>
+            <input type="checkbox" formControlName="clientState" />
+            Estado Activo
+          </label>
+        </div>
+
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn-cancel" (click)="closeModal()">Cancelar</button>
+        <button type="submit" class="btn-save">
+          {{ isEditMode ? 'Actualizar' : 'Guardar' }}
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <div class="notification" *ngIf="showNotification" 
+      [class.notification-success]="notificationType === 'success'"
+      [class.notification-error]="notificationType === 'error'">
+      {{ notificationMessage }}
+  </div>
+</div>
