@@ -1,0 +1,105 @@
+version: '3.8'
+
+services:
+  # Base de datos PostgreSQL para Clientes
+  postgres-clients:
+    image: postgres:15-alpine
+    container_name: banco-postgres-clients
+    environment:
+      POSTGRES_DB: clients
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: test
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_clients_data:/var/lib/postgresql/data
+    networks:
+      - banco-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Base de datos PostgreSQL para Cuentas
+  postgres-accounts:
+    image: postgres:15-alpine
+    container_name: banco-postgres-accounts
+    environment:
+      POSTGRES_DB: accounts
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: test
+    ports:
+      - "5433:5432"  # Puerto diferente para evitar conflicto
+    volumes:
+      - postgres_accounts_data:/var/lib/postgresql/data
+    networks:
+      - banco-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Microservicio Cliente-Persona
+  ms-cliente-persona:
+    build:
+      context: ./banking-backend/ms-cliente-persona
+      dockerfile: Dockerfile
+    container_name: banco-ms-cliente-persona
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-clients:5432/clients
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: test
+      SERVER_PORT: 7085
+    ports:
+      - "7085:7085"
+    depends_on:
+      postgres-clients:
+        condition: service_healthy
+    networks:
+      - banco-network
+    restart: on-failure
+
+  # Microservicio Cuenta-Movimiento
+  ms-cuenta-movimiento:
+    build:
+      context: ./banking-backend/ms-cuenta-movimiento
+      dockerfile: Dockerfile
+    container_name: banco-ms-cuenta-movimiento
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-accounts:5432/accounts
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: test
+      SERVER_PORT: 7086
+      BANCO_LIMITE_DIARIO_RETIRO: 1000
+    ports:
+      - "7086:7086"
+    depends_on:
+      postgres-accounts:
+        condition: service_healthy
+    networks:
+      - banco-network
+    restart: on-failure
+
+  # Frontend Angular
+  frontend:
+    build:
+      context: ./banking-app
+      dockerfile: Dockerfile
+    container_name: banco-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - ms-cliente-persona
+      - ms-cuenta-movimiento
+    networks:
+      - banco-network
+
+volumes:
+  postgres_clients_data:
+  postgres_accounts_data:
+
+networks:
+  banco-network:
+    driver: bridge
